@@ -1,1 +1,3 @@
-# user-service
+# foodify
+
+Food ordering website
