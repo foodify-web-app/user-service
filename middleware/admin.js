@@ -1,8 +1,11 @@
-import jwt from "jsonwebtoken";
+import jwt from 'jsonwebtoken';
 
-const authMiddleware = async (req, res, next) => {
-
+const adminMiddleware = (req, res, next) => {
     const { token } = req.headers;
+
+    console.log(token);
+    console.log(req.headers);
+    
     if (!token) {
         return res.status(401).json({ success: false, message: "Not Authorized login Again" });
     }
@@ -10,6 +13,10 @@ const authMiddleware = async (req, res, next) => {
     try {
         const token_decode = jwt.verify(token, process.env.JWT_SECRET);
         req.body.userId = token_decode.id;
+        req.body.role = token_decode.role;
+        if (token_decode.role != 'admin') {
+            return res.status(403).json({ success: false, message: "Admin access only" })
+        }
         next();
     } catch (error) {
         console.log(error);
@@ -17,4 +24,4 @@ const authMiddleware = async (req, res, next) => {
     }
 }
 
-export default authMiddleware;
+export default adminMiddleware;
