@@ -23,8 +23,14 @@ app.use("/api/user", userRouter)
 app.get("/api/user", (req, res) => {
     res.send("User API is Working ")
 })
+app.get("/", (req, res) => {
+    res.send("User is Working ")
+})
+app.get("/api/user", (req, res) => {
+    res.send("User API is Working ")
+})
 
 app.listen(port, () => {
-    console.log(`Server Started on http://localhost:${port}`)
+    console.log(`user service Server Started on http://localhost:${port}`)
 })
 
