@@ -3,7 +3,6 @@ import cors from "cors"
 import { connectDB } from "./config/db.js"
 import userRouter from "./routes/userRoute.js"
 
-
 import dotenv from 'dotenv';
 dotenv.config(); // Ensure this is at the very top
 const app = express()
@@ -32,5 +31,6 @@ app.get("/api/user", (req, res) => {
 
 app.listen(port, () => {
     console.log(`user service Server Started on http://localhost:${port}`)
+    
 })
 

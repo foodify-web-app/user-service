@@ -9,7 +9,8 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['customer', 'restaurant', 'delivery_partner', 'admin'],
         default: 'customer'
-    }
+    },
+    isDeleted : {type : Boolean, default : false}
 }, { minimize: false, timestamps: true })
 
 const userModel = mongoose.models.user || mongoose.model("user", userSchema);
