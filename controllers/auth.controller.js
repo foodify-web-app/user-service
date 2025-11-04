@@ -19,10 +19,13 @@ export const loginUser = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid credentials" });
         }
 
-        const { accessToken, refreshToken } = createToken(user._id, user.role);
-        await redis.set(`refresh:${user._id}`, refreshToken, "EX", 7 * 24 * 60 * 60); // 7 days
+        const response = await createToken(user._id, user.role);
 
-        res.status(200).json({ success: true, accessToken, refreshToken, userId: user._id, role: user.role });
+        if (!response.success) {
+            return res.status(400).json(response);
+        }
+
+        res.status(200).json({ success: true, token: response.token, userId: user._id, role: user.role });
 
     } catch (error) {
         console.log('login user server error : ', error);
@@ -62,10 +65,13 @@ export const registerUser = async (req, res) => {
         });
 
         const user = await newUser.save();
-        const { accessToken, refreshToken } = createToken(user._id, user.role);
-        // await redis.del(cache_all_users);
+        const response = await createToken(user._id, user.role);
+
+        if (!response.success) {
+            return res.status(400).json(response);
+        }
         await syncUserToRedis(user);
-        res.status(200).json({ success: true, accessToken, refreshToken, userId: user._id, role: user.role });
+        res.status(200).json({ success: true, token: response.token, userId: user._id, role: user.role });
 
     } catch (error) {
         console.log('register user server error : ', error);
@@ -104,9 +110,13 @@ export const registerAdminUser = async (req, res) => {
         });
 
         const user = await newUser.save();
-        const { accessToken, refreshToken } = createToken(user._id, user.role);
+        const response = await createToken(user._id, user.role);
 
-        res.status(200).json({ success: true, accessToken, refreshToken, userId: user._id, role: user.role });
+        if (!response.success) {
+            return res.status(400).json(response);
+        }
+
+        res.status(200).json({ success: true, token: response.token, userId: user._id, role: user.role });
 
     } catch (error) {
         console.log('register user server error : ', error);
@@ -115,21 +125,20 @@ export const registerAdminUser = async (req, res) => {
 }
 
 export const refreshToken = async (req, res) => {
-    const { refreshtoken } = req.headers;
-    
-    if (!refreshtoken) return res.status(401).json({ message: "Missing token" });
+    const { userId, role } = req.body;
+    const refreshtoken = await redis.get(`refresh:${userId}`);
+    console.log("stored" + refreshtoken)
+
+    // if (!refreshtoken) return res.status(401).json({ message: "Missing token" });
     try {
-        const decoded = jwt.verify(refreshtoken, process.env.JWT_SECRET);
-        const stored = await redis.get(`refresh:${decoded.id}`);
-        console.log("stored" + stored)
-        
-        if (stored !== refreshtoken)
+
+        if (!refreshtoken)
             return res.status(403).json({ message: "Invalid or expired refresh token" });
 
-        const newAccessToken = createAccessToken(decoded.id, decoded.role);
+        const newAccessToken = createAccessToken(userId, role);
         res.status(200).json({ success: true, accessToken: newAccessToken });
     } catch (err) {
-        res.status(403).json({ message: "Invalid Refresh token" , err });
+        res.status(403).json({ message: "Invalid Refresh token", err });
     }
 }
 
