@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
-import redis from '../config/redis.js';
-import refreshTokenModel from '../models/refreshTokenModel.js';
+import {redis} from '../config/redis.js';
+import crypto from "crypto";
+import { createOrUpdateToken } from '../services/refreshToken.service.js';
 
 // Helper function to create JWT
 export const createAccessToken = (id, role, sessionId) => { // Also include role in the token
@@ -20,15 +21,15 @@ export const createToken = async (id, role) => {
     const refreshToken = createRefreshToken(id, role, sessionId);
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     try {
-        await redis.set(`refresh:${id}:${sessionId}`, refreshToken, "EX", 7 * 24 * 60 * 60);
-        await refreshTokenModel.updateOne(
-            { userId: id },
-            { $set: { token: refreshToken, expiresAt, sessionId } },
-            { upsert: true }
-        );
+        // await redis.set(`refresh:${id}:${sessionId}`, refreshToken, "EX", 7 * 24 * 60 * 60);
+        await createOrUpdateToken({ userId: id, sessionId, token: refreshToken, expiresAt });
     } catch (err) {
         return { success: false, message: `error occured : ${err.message}` }
     }
 
     return { success: true, token: accessToken }
+}
+
+export const verifyJwt = (token) => {
+        return jwt.verify(token, process.env.JWT_SECRET);
 }

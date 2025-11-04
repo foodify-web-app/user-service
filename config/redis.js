@@ -11,5 +11,18 @@ if (redis) {
     console.log("❌ error to connect redis server on PORT 6379 ");
 }
 
+const redisPublisher = new Redis({
+    host: "localhost",
+    port: 6379,
+});
 
-export default redis;
+const redisSubscriber = new Redis({
+    host: "localhost",
+    port: 6379,
+});
+
+redisPublisher.on("connect", () => console.log("✅ Redis Publisher Connected"));
+redisSubscriber.on("connect", () => console.log("✅ Redis Subscriber Connected"));
+
+
+export { redis, redisPublisher, redisSubscriber };

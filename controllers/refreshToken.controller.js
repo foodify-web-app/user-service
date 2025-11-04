@@ -119,11 +119,6 @@ export const updateRefreshToken = async (req, res) => {
     }
 };
 
-/**
- * @desc Delete a refresh token (e.g., on logout)
- * @route DELETE /api/refresh-tokens/:id
- * @access Private
- */
 export const deleteRefreshToken = async (req, res) => {
     try {
         const { id } = req.params;
@@ -147,11 +142,6 @@ export const deleteRefreshToken = async (req, res) => {
     }
 };
 
-/**
- * @desc Delete all refresh tokens for a specific user (e.g., "log out all devices")
- * @route DELETE /api/refresh-tokens/user/:userId
- * @access Private
- */
 export const deleteAllRefreshTokensForUser = async (req, res) => {
     try {
         const { userId } = req.params;

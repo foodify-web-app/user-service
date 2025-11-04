@@ -1,13 +1,19 @@
-import refreshTokenModel from "./refreshToken.model.js"; // Assuming the model is in a sibling file
+import refreshTokenModel from "../models/refreshTokenModel.js";
+import { publishTokenUpdateEvent, getRefreshTokenPayload } from "../utils/redis.js";
 
 export const createOrUpdateToken = async (tokenData) => {
     const { userId, sessionId, token, expiresAt } = tokenData;
 
-    const savedToken = await refreshTokenModel.findOneAndUpdate(
-        { userId: userId }, // Filter by userId as in your example
-        { $set: { token: token, expiresAt: expiresAt, sessionId: sessionId } }, // The update
-        { upsert: true } // Options
+    const newToken = await new refreshTokenModel(
+        {
+            token, sessionId, expiresAt, userId
+        }
     );
+    const savedToken = newToken.save();
+
+    const refreshTokenPayload = getRefreshTokenPayload(tokenData);
+    await publishTokenUpdateEvent("TOKEN_EVENTS", refreshTokenPayload);
+
     return savedToken;
 };
 
@@ -17,6 +23,10 @@ export const getAllTokens = async () => {
 
 export const getTokensByUserId = async (userId) => {
     return refreshTokenModel.find({ userId: userId }).sort({ createdAt: -1 });
+};
+
+export const getTokensBySessionId = async (sessionId) => {
+    return refreshTokenModel.findOne({ sessionId });
 };
 
 export const getTokenById = async (id) => {
@@ -29,7 +39,7 @@ export const updateTokenById = async (id, updateData) => {
     let existingToken = await refreshTokenModel.findById(id);
 
     if (!existingToken) {
-        return null; 
+        return null;
     }
 
     // Update fields
@@ -45,4 +55,10 @@ export const deleteTokenById = async (id) => {
 
 export const deleteTokensForUser = async (userId) => {
     return refreshTokenModel.deleteMany({ userId: userId });
+};
+
+export const deleteTokenBySessionId = async (sessionId) => {
+    
+    return refreshTokenModel.findOneAndDelete({ sessionId });
+
 };
