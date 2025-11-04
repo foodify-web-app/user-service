@@ -1,8 +1,9 @@
 import Redis from "ioredis";
-
+import dotenv from 'dotenv';
+dotenv.config();
 const redis = new Redis({
-    host: 'localhost',   // or service name if using Docker Compose
-    port: 6379,
+    host: process.env.REDIS_HOST || "localhost", // "redis" inside Docker, "localhost" locally
+    port: process.env.REDIS_PORT || 6379,
 });
 
 if (redis) {
@@ -12,13 +13,13 @@ if (redis) {
 }
 
 const redisPublisher = new Redis({
-    host: "localhost",
-    port: 6379,
+    host: process.env.REDIS_HOST || "localhost", // "redis" inside Docker, "localhost" locally
+    port: process.env.REDIS_PORT || 6379,
 });
 
 const redisSubscriber = new Redis({
-    host: "localhost",
-    port: 6379,
+    host: process.env.REDIS_HOST || "localhost", // "redis" inside Docker, "localhost" locally
+    port: process.env.REDIS_PORT || 6379,
 });
 
 redisPublisher.on("connect", () => console.log("✅ Redis Publisher Connected"));
