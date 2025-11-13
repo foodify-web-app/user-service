@@ -1,57 +1,63 @@
 // services/user.service.js
 import userModel from "../models/userModel.js";
 import bcrypt from "bcryptjs";
-import {redis} from "../config/redis.js";
+import validator from "validator";
 
-const cache_all_users = 'admin_all_users';
-const ttl = 6 * 24 * 60 * 60; // 6 days in seconds
+export const register = async ({ name, email, password, role }) => {
+    const exists = await userModel.findOne({ email, isDeleted: false });
+    if (exists) throw new Error("User already exists");
 
-// --- Redis Helpers ---
-export const getUserFromCache = async (userId) => {
-    const cachedUser = await redis.hget(cache_all_users, userId);
-    return cachedUser ? JSON.parse(cachedUser) : null;
+    if (!validator.isEmail(email)) throw new Error("Please enter a valid email");
+    if (password.length < 8)
+        throw new Error("Please enter a strong password (min 8 characters)");
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = new userModel({
+        name,
+        email,
+        password: hashedPassword,
+        role,
+    });
+
+    const user = await newUser.save();
+    return { userId: user._id, role: user.role };
 };
 
-export const syncUserToRedis = async (user) => {
-    if (user.role !== 'admin' && !user.isDeleted) {
-        await redis.hset(cache_all_users, user._id.toString(), JSON.stringify(user));
-    } else {
-        await redis.hdel(cache_all_users, user._id.toString());
-    }
+export const registerAdmin = async ({ name, email, password }) => {
+    const exists = await userModel.findOne({ email });
+    if (exists) throw new Error("User already exists");
+
+    if (!validator.isEmail(email)) throw new Error("Please enter a valid email");
+    if (password.length < 8)
+        throw new Error("Please enter a strong password (min 8 characters)");
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = new userModel({
+        name,
+        email,
+        password: hashedPassword,
+        role: "admin",
+    });
+
+    const user = await newUser.save();
+
+    return { userId: user._id, role: user.role };
 };
 
-// --- Business Logic ---
 export const fetchAllUsers = async (includeDeleted = false) => {
-    const exists = await redis.exists(cache_all_users);
     let users;
 
     const filter = { role: { $ne: "admin" } };
     if (!includeDeleted) filter.isDeleted = false;
-
-    if (exists && !includeDeleted) {
-        const cacheUsers = await redis.hgetall(cache_all_users);
-        users = Object.values(cacheUsers).map(u => JSON.parse(u));
-        users.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    } else {
-        users = await userModel.find(filter).sort({ createdAt: -1 });
-        if (!includeDeleted) {
-            const pipeline = redis.pipeline();
-            for (const user of users) {
-                pipeline.hset(cache_all_users, user._id.toString(), JSON.stringify(user));
-            }
-            await pipeline.exec();
-            await redis.expire(cache_all_users, ttl);
-        }
-    }
+    users = await userModel.find(filter).sort({ createdAt: -1 });
     return users;
 };
 
 export const fetchUserById = async (id) => {
-    const exists = await redis.exists(cache_all_users);
-    if (exists) {
-        const cachedUser = await getUserFromCache(id);
-        if (cachedUser) return cachedUser;
-    }
     return await userModel.findById(id).select('-password');
 };
 
@@ -71,13 +77,11 @@ export const updateUserData = async (id, data) => {
     }
 
     const updatedUser = await userModel.findByIdAndUpdate(id, updateData, { new: true }).select('-password');
-    if (updatedUser) await syncUserToRedis(updatedUser);
     return updatedUser;
 };
 
 export const softDeleteUser = async (id) => {
     const user = await userModel.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
-    if (user) await syncUserToRedis(user);
     return user;
 };
 

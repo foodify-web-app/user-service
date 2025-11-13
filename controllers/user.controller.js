@@ -4,8 +4,33 @@ import {
     fetchUserById,
     fetchUserProfile,
     updateUserData,
-    softDeleteUser
+    softDeleteUser,
+    register,
+    registerAdmin
 } from "../services/user.service.js";
+
+// ---- REGISTER ----
+export const registerUser = async (req, res) => {
+    try {
+        const data = await register(req.body);
+        res.status(200).json({ success: true, ...data });
+    } catch (err) {
+        console.error("Register Error:", err);
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// ---- REGISTER ADMIN ----
+export const registerAdminUser = async (req, res) => {
+    try {
+        const data = await registerAdmin(req.body);
+        res.status(200).json({ success: true, ...data });
+    } catch (err) {
+        console.error("Register Admin Error:", err);
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
 
 // Get all users (Admin only)
 export const getAllUsers = async (req, res) => {
