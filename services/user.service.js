@@ -62,21 +62,16 @@ export const fetchUserById = async (id) => {
 };
 
 export const updateUserData = async (id, data) => {
-    const { name, email, password } = data;
-    const updateData = { isDeleted: false };
 
-    if (name) updateData.name = name;
-    if (email) updateData.email = email;
-
-    if (password) {
-        if (password.length < 8) {
+    if (data.password) {
+        if (data.password.length < 8) {
             throw new Error("Password must be at least 8 characters long");
         }
         const salt = await bcrypt.genSalt(10);
-        updateData.password = await bcrypt.hash(password, salt);
+        data.password = await bcrypt.hash(data.password, salt);
     }
 
-    const updatedUser = await userModel.findByIdAndUpdate(id, updateData, { new: true }).select('-password');
+    const updatedUser = await userModel.findByIdAndUpdate(id, data, { new: true }).select('-password');
     return updatedUser;
 };
 
