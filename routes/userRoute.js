@@ -10,7 +10,7 @@ userRouter.delete("/admin/delete/:id", adminMiddleware, deleteUser);
 
 userRouter.get('/profile', authMiddleware, getUserProfile);
 userRouter.get("/:id", authMiddleware, getUserById);
-userRouter.post("/update/:id", updateUser);
+userRouter.put("/update/:id", updateUser);
 userRouter.post("/register", registerUser);
 userRouter.post("/admin/register", registerAdminUser);
 export default userRouter;
