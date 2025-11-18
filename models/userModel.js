@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
+    mobile: { type: String },
     password: { type: String, required: true },
     cartData: { type: Object, default: {} },
     role: {

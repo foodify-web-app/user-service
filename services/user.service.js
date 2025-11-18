@@ -3,7 +3,7 @@ import userModel from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import validator from "validator";
 
-export const register = async ({ name, email, password, role }) => {
+export const register = async ({ name, email, password, role, mobile }) => {
     const exists = await userModel.findOne({ email, isDeleted: false });
     if (exists) throw new Error("User already exists");
 
@@ -19,6 +19,7 @@ export const register = async ({ name, email, password, role }) => {
         email,
         password: hashedPassword,
         role,
+        mobile
     });
 
     const user = await newUser.save();
