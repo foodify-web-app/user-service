@@ -2,6 +2,10 @@
 import userModel from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import validator from "validator";
+import axios from "axios";
+import dotenv from "dotenv";
+dotenv.config();
+const restaurant_service_url = process.env.RESTAURANT_SERVICE_URL;
 
 export const register = async ({ name, email, password, role, mobile }) => {
     const exists = await userModel.findOne({ email, isDeleted: false });
@@ -23,6 +27,10 @@ export const register = async ({ name, email, password, role, mobile }) => {
     });
 
     const user = await newUser.save();
+    if (role == 'restaurant') {
+        await axios.post(`${restaurant_service_url}/register`, { name, userId: user._id });
+    }
+
     return { userId: user._id, role: user.role };
 };
 

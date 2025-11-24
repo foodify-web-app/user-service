@@ -16,7 +16,7 @@ export const registerUser = async (req, res) => {
         res.status(200).json({ success: true, ...data });
     } catch (err) {
         console.error("Register Error:", err);
-        res.status(400).json({ success: false, message: err.message });
+        res.status(401).json({ success: false, message: err.message });
     }
 };
 
@@ -27,7 +27,7 @@ export const registerAdminUser = async (req, res) => {
         res.status(200).json({ success: true, ...data });
     } catch (err) {
         console.error("Register Admin Error:", err);
-        res.status(400).json({ success: false, message: err.message });
+        res.status(401).json({ success: false, message: err.message });
     }
 };
 
@@ -68,7 +68,7 @@ export const updateUser = async (req, res) => {
     } catch (err) {
         console.error(err);
         const msg = err.message?.includes("Password") ? err.message : "Server Error";
-        res.status(400).json({ success: false, message: msg });
+        res.status(401).json({ success: false, message: msg });
     }
 };
 
