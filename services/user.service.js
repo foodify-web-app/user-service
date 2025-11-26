@@ -28,7 +28,7 @@ export const register = async ({ name, email, password, role, mobile }) => {
 
     const user = await newUser.save();
     if (role == 'restaurant') {
-        await axios.post(`${restaurant_service_url}/register`, { name, userId: user._id });
+        await axios.post(`${restaurant_service_url}/create`, { name, userId: user._id });
     }
 
     return { userId: user._id, role: user.role };
